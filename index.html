@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <main class="weather-widget">
+        <div class="weather-header">
+            <h1 id="city-name">Copenhagen</h1> <p class="date">Thursday, 9 October 2025</p>
+        </div>
+
+        <form id="city-search-form" class="city-search">
+            <input type="text" id="city-input" placeholder="Enter a city..." required>
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="weather-body">
+            <div class="weather-icon">
+                <img id="weather-icon-img" src="https://openweathermap.org/img/wn/01d@2x.png" alt="Weather icon">
+            </div>
+            <div class="weather-details">
+                <p class="temperature" id="temperature">--°C</p>
+                <p class="description" id="description">Loading...</p>
+                <p class="wind" id="wind">Wind: -- km/h</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
