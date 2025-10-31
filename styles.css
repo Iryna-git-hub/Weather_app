@@ -3,7 +3,7 @@ body {
   background: #eef7f3;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: self-start;
   height: 100vh;
   margin: 0;
   color: #fff;
@@ -117,4 +117,10 @@ body {
   font-weight: 600;
   text-align: left;
   margin: 5px 0 0;
+}
+
+@media (min-width: 600px) {
+  body {
+    align-items: center;
+  }
 }
