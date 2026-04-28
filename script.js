@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const apiKey = "addee62dabbee517e820bdc87c12c970";
+  const API_KEY = "addee62dabbee517e820bdc87c12c970";
+  const DEFAULT_CITY = "Copenhagen";
+  const WEATHER_API_URL = "https://api.openweathermap.org/data/2.5/weather";
 
   const cityElement = document.getElementById("city-name");
   const tempElement = document.getElementById("temperature");
@@ -10,6 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const dateElement = document.querySelector(".date");
   const formElement = document.getElementById("city-search-form");
   const inputElement = document.getElementById("city-input");
+  const searchButton = formElement.querySelector("button");
+  const weatherIcon = document.querySelector(".weather-icon");
+  const weatherDetails = document.querySelectorAll(".weather-details");
 
   formElement.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -24,56 +29,94 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   async function fetchWeather(city) {
-    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+    const params = new URLSearchParams({
+      q: city,
+      appid: API_KEY,
+      units: "metric",
+    });
+
+    await fetchAndDisplayWeather(`${WEATHER_API_URL}?${params}`);
+  }
+
+  async function fetchWeatherByCoords(lat, lon) {
+    const params = new URLSearchParams({
+      lat,
+      lon,
+      appid: API_KEY,
+      units: "metric",
+    });
+
+    await fetchAndDisplayWeather(`${WEATHER_API_URL}?${params}`);
+  }
+
+  async function fetchAndDisplayWeather(apiUrl) {
+    setLoadingState(true);
 
     try {
       const response = await fetch(apiUrl);
+
       if (response.status === 404) {
         throw new Error("City not found");
       }
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+
       const data = await response.json();
       updateUI(data);
     } catch (error) {
       console.error("There was a problem fetching the weather data:", error);
-
-      cityElement.textContent = "City not found";
-
-      tempElement.textContent = "";
-      descElement.textContent = "";
-      windElement.textContent = "";
-      humidityElement.textContent = "";
-      iconElement.src = "";
-
-      document.querySelector(".weather-icon").classList.add("hidden");
-      document
-        .querySelectorAll(".weather-details")
-        .forEach((el) => el.classList.add("hidden"));
+      showError(error.message === "City not found" ? "City not found" : "Weather unavailable");
+    } finally {
+      setLoadingState(false);
     }
   }
 
   function updateUI(weatherData) {
-    const cityName = weatherData.name;
     const temperature = Math.round(weatherData.main.temp);
     const description = weatherData.weather[0].description;
-    const windSpeed = weatherData.wind.speed;
+    const windSpeed = Math.round(weatherData.wind.speed);
     const iconCode = weatherData.weather[0].icon;
     const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@4x.png`;
 
-    document.querySelector(".weather-icon").classList.remove("hidden");
-    document
-      .querySelectorAll(".weather-details")
-      .forEach((el) => el.classList.remove("hidden"));
+    setWeatherDetailsVisibility(true);
 
-    cityElement.textContent = cityName;
-    tempElement.textContent = `${temperature}°C`;
+    cityElement.textContent = weatherData.name;
+    tempElement.textContent = `${temperature}\u00b0C`;
     descElement.textContent = description;
     iconElement.src = iconUrl;
     iconElement.alt = description;
     windElement.textContent = `${windSpeed} m/s`;
     humidityElement.textContent = `${weatherData.main.humidity}%`;
+  }
+
+  function setLoadingState(isLoading) {
+    searchButton.disabled = isLoading;
+    searchButton.textContent = isLoading ? "Loading" : "Search";
+
+    if (isLoading) {
+      cityElement.textContent = "Loading...";
+      descElement.textContent = "Fetching current weather";
+    }
+  }
+
+  function showError(message) {
+    cityElement.textContent = message;
+    tempElement.textContent = "";
+    descElement.textContent = "Try another city name.";
+    windElement.textContent = "";
+    humidityElement.textContent = "";
+    iconElement.removeAttribute("src");
+    iconElement.alt = "";
+    setWeatherDetailsVisibility(false);
+  }
+
+  function setWeatherDetailsVisibility(isVisible) {
+    weatherIcon.classList.toggle("hidden", !isVisible);
+    weatherDetails.forEach((element) => {
+      element.classList.toggle("hidden", !isVisible);
+    });
   }
 
   function displayCurrentDate() {
@@ -82,9 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
     dateElement.textContent = today.toLocaleString("en-US", options);
   }
 
-  // Initial Calls
-  displayCurrentDate();
-  // Fetch weather for a default city when the page loads
   displayCurrentDate();
 
   if (navigator.geolocation) {
@@ -95,24 +135,11 @@ document.addEventListener("DOMContentLoaded", () => {
       },
       (error) => {
         console.error("Geolocation error:", error);
-        fetchWeather("Copenhagen");
+        fetchWeather(DEFAULT_CITY);
       },
+      { timeout: 10000 },
     );
   } else {
-    fetchWeather("Copenhagen");
-  }
-
-  async function fetchWeatherByCoords(lat, lon) {
-    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error("Network response was not ok");
-      const data = await response.json();
-      updateUI(data);
-    } catch (error) {
-      console.error("There was a problem fetching the weather data:", error);
-      cityElement.textContent = "Error";
-      descElement.textContent = "Could not fetch weather data.";
-    }
+    fetchWeather(DEFAULT_CITY);
   }
 });
