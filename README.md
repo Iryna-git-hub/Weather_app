@@ -2,7 +2,7 @@
 
 A simple responsive weather widget built with HTML, CSS, and vanilla JavaScript. The app uses the OpenWeatherMap API to show current weather conditions for the user's location or a searched city.
 
-<img src="./screenshot.png" alt="project screeshot" width="600">
+<img src="./screenshot.png" alt="project screeshot">
 
 ## Features
 
